@@ -34,7 +34,7 @@ for p = 0.4:0.1:2           % exponential distribution coefficient
         n = ones(channels, 1);          % Scan period multiplier array
         samples = zeros(channels, 1);   % # of times each channel sampled by PASS
         for k = 1:sweeps
-            A = ones( channels , t );       % Matrix of time-frequency assignments
+            A = ones( channels , q );       % Matrix of time-frequency assignments
             for j = 1:q
                 for i = 1:channels
                     current = (k - 1)*10 + j;
@@ -44,8 +44,8 @@ for p = 0.4:0.1:2           % exponential distribution coefficient
                         if temp == 1
                             occupied2(i) = occupied2(i) + 1;
                             n(i) = n(i) + 1;
-                            if n(i) > backoffMax
-                                n(i) = backoffMax;
+                            if n(i) > q
+                                n(i) = q;
                             end
                             temp2 = j + n(i) - 1;
                             if temp2 > q
