@@ -1,7 +1,8 @@
 % Testing the Parametric Adaptive Spectrum Sensing (PASS) algorithm for
 % dynamic spectrum sensing
-% Sweeping across max scan period and exponential distr. coefficient
 % From 2007 paper by D. Datla et al.
+%  * Multi-channel testing, exponential distribution
+%  * Sweeping across max scan period and exponential distr. coefficient
 %-----------------------------------------------------------------------
 
 % Simulation parameters
@@ -19,9 +20,9 @@ startQ = 10;
 stopQ = 200;
 sweepsQ = 20;
 reductionTot = zeros(sweepsP, sweepsQ);    % p x q
-lossTot = zeros(sweepsP, sweepsQ);
 samplesTot = zeros(sweepsP, sweepsQ);
 vacanciesTot = zeros(sweepsP, sweepsQ);
+vacanciesTot2 = zeros(sweepsP, sweepsQ);
 
 for p = linspace(startP, stopP, sweepsP)           % exponential distribution coefficient
     x = round((p - startP)/0.05 + 1);
@@ -37,7 +38,7 @@ for p = linspace(startP, stopP, sweepsP)           % exponential distribution co
     for q = linspace(startQ, stopQ, sweepsQ)        % length of time-freq assignment matrix row
         y = (q - startQ)/10 + 1;
         A = ones( channels , q );       % Matrix of time-frequency assignments
-        sweeps = round(length / q);             % # of times PASS algorithm runs
+        sweeps = floor(length / q);             % # of times PASS algorithm runs
         occupied2 = zeros(channels, 1);
         vacant2 = zeros(channels, 1);
         n = ones(channels, 1);          % Scan period multiplier array
@@ -46,7 +47,7 @@ for p = linspace(startP, stopP, sweepsP)           % exponential distribution co
             %A = ones( channels , q );       % Matrix of time-frequency assignments
             for j = 1:q
                 for i = 1:channels
-                    current = (k - 1)*10 + j;
+                    current = (k - 1)*q + j;
                     if A(i, j) == 1
                         temp = M(i, current);
                         samples(i) = samples(i) + 1;
@@ -74,14 +75,15 @@ for p = linspace(startP, stopP, sweepsP)           % exponential distribution co
         end
 
         % Calculate metrics
-        reduction = samples ./ length;       % Scans as fraction of total length
         samplesTot(x, y) = sum(samples);
-        vacanciesTot(x, y) = sum(vacant2);
-        lossTot(x, y) = sum(vacant2) / sum(vacant); 
-        reductionTot(x, y) = sum(samples) / (channels * length);       
-               
+        vacanciesTot(x, y) = sum(vacant);
+        vacanciesTot2(x, y) = sum(vacant2);        
+        reductionTot(x, y) = sum(samples) / (channels * length);     
     end 
 end
+
+vacanciesRatio = vacanciesTot2 ./ vacanciesTot;
+opt = vacanciesRatio ./ reductionTot;
 
 % xlswrite('PASS_sweep1_samples', samplesTot)
 % xlswrite('PASS_sweep1_reduction', reductionTot)

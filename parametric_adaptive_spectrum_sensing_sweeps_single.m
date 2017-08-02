@@ -1,8 +1,8 @@
 % Testing the Parametric Adaptive Spectrum Sensing (PASS) algorithm for
 % dynamic spectrum sensing
-% Single channel testing, exponential distribution
-% Sweeping across max scan period and exponential distr. coefficient
 % From 2007 paper by D. Datla et al.
+%  * Single channel testing, exponential distribution
+%  * Sweeping across max scan period and exponential distr. coefficient
 %-----------------------------------------------------------------------
 
 % Simulation parameters
@@ -21,6 +21,8 @@ sweepsQ = 20;
 reductionTot = zeros(sweepsP, sweepsQ);    % p x q
 lossTot = zeros(sweepsP, sweepsQ);
 samplesTot = zeros(sweepsP, sweepsQ);
+vacanciesTot = zeros(sweepsP, sweepsQ);
+vacanciesTot2 = zeros(sweepsP, sweepsQ);
 
 for p = linspace(startP, stopP, sweepsP)           % exponential distribution coefficient
     x = round((p - startP)/0.05 + 1);
@@ -36,7 +38,11 @@ for p = linspace(startP, stopP, sweepsP)           % exponential distribution co
     for q = linspace(startQ, stopQ, sweepsQ)        % length of time-freq assignment matrix row
         y = (q - startQ)/10 + 1;
         A = ones( 1 , q );       % Matrix of time-frequency assignments
-        sweeps = round(length / q);             % # of times PASS algorithm runs
+        sweeps = floor(length / q);             % # of times PASS algorithm runs
+        lengthB = sweeps*q;                     % Number of samples included
+        % Calculate number of occupied and vacant samples per channel
+        occupied = sum(M(1:lengthB));
+        vacant = lengthB - occupied;
         occupied2 = 0;
         vacant2 = 0;
         n = 1;          % Scan period multiplier array
@@ -44,7 +50,7 @@ for p = linspace(startP, stopP, sweepsP)           % exponential distribution co
         for k = 1:sweeps
             %A = ones( 1 , q );       % Matrix of time-frequency assignments
             for j = 1:q                
-                current = (k - 1)*10 + j;
+                current = (k - 1)*q + j;
                 if A(j) == 1
                     temp = M(current);
                     samples = samples + 1;
@@ -72,10 +78,11 @@ for p = linspace(startP, stopP, sweepsP)           % exponential distribution co
         % Calculate metrics     
         samplesTot(x, y) = samples;
         reductionTot(x, y) = samples / length;       
-        lossTot(x, y) = vacant2 / vacant;
+        vacanciesTot(x, y) = vacant;
+        vacanciesTot2(x, y) = vacant2;
     end    
 end
 
-% xlswrite('PASS_sweep1_samples', samplesTot)
-% xlswrite('PASS_sweep1_reduction', reductionTot)
-% xlswrite('PASS_sweep1_loss', lossTot)
+vacanciesRatio = vacanciesTot2 ./ vacanciesTot;
+vacanciesRatio(sweepsP, :) = 1;
+opt = vacanciesRatio ./ reductionTot;
