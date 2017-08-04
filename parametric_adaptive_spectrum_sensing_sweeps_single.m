@@ -18,12 +18,17 @@ sweepsP = 7;
 startQ = 10;
 stopQ = 200;
 sweepsQ = 20;
+n1_def = 1;
+n2_def = 1;
 reductionTot = zeros(sweepsP, sweepsQ);    % p x q
 lossTot = zeros(sweepsP, sweepsQ);
 samplesTot = zeros(sweepsP, sweepsQ);
 vacanciesTot = zeros(sweepsP, sweepsQ);
 vacanciesTot2 = zeros(sweepsP, sweepsQ);
 
+%------------------------------------------------------------------------
+% PASS algorithm
+%------------------------------------------------------------------------
 for p = linspace(startP, stopP, sweepsP)           % exponential distribution coefficient
     x = round((p - startP)/0.05 + 1);
     m = p;                % constant coefficient for exponential distr.
@@ -45,7 +50,7 @@ for p = linspace(startP, stopP, sweepsP)           % exponential distribution co
         vacant = lengthB - occupied;
         occupied2 = 0;
         vacant2 = 0;
-        n = 1;          % Scan period multiplier array
+        n1 = n1_def;          % Scan period multiplier array
         samples = 0;   % # of times each channel sampled by PASS
         for k = 1:sweeps
             %A = ones( 1 , q );       % Matrix of time-frequency assignments
@@ -56,21 +61,21 @@ for p = linspace(startP, stopP, sweepsP)           % exponential distribution co
                     samples = samples + 1;
                     if temp == 1
                         occupied2 = occupied2 + 1;
-                        n = n + 1;
-                        if n > q
-                            n = q;
+                        n1 = n1 + 1;
+                        if n1 > q
+                            n1 = q;
                         end
-                        temp2 = j + n - 1;
+                        temp2 = j + n1 - 1;
                         if temp2 > q
                             temp2 = q;
                         end
                         A(j: temp2) = 0;
                     elseif temp == 0
                         vacant2 = vacant2 + 1;
-                        n = 1;
+                        n1 = n1_def;
                     end 
                 elseif A(j) == 0
-                    n = 1;
+                    n1 = n1_def;
                 end                
             end
         end

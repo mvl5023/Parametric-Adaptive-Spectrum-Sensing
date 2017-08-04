@@ -1,6 +1,7 @@
 % Testing the Parametric Adaptive Spectrum Sensing (PASS) algorithm for
 % dynamic spectrum sensing
-% From 2007 paper by D. Datla et al.
+% From 2007 paper by D. Datla et al
+%  * Modified to regenerate sampling in event that vacancy is detected
 %  * Single channel testing, periodic occupancy
 %  * Sweeping across max scan period and occupancy percentage
 %-----------------------------------------------------------------------
@@ -17,7 +18,6 @@ sweepsP = 10;
 startQ = 10;
 stopQ = 200;
 sweepsQ = 20;
-n1_def = 1;
 reductionTot = zeros(sweepsP, sweepsQ);    % p x q
 lossTot = zeros(sweepsP, sweepsQ);
 samplesTot = zeros(sweepsP, sweepsQ);
@@ -39,43 +39,53 @@ for p = linspace(startP, stopP, sweepsP)           % channel occupancy variation
         vacant = lengthB - occupied;
         occupied2 = 0;
         vacant2 = 0;
-        n = n1_def;          % Scan period multiplier array
+        n1 = 1;          % Number of scan periods removed from A
+        n2 = 1;          % Number of scan periods added to A
         samples = 0;   % # of times each channel sampled by PASS
-        for k = 1:sweeps       % Slide A matrix across occupancy data
+        for k = 1:sweeps
             %A = ones( 1 , q );       % Matrix of time-frequency assignments
-            for j = 1:q               % Sweep through columns of A (samples)  
+            for j = 1:q                
                 current = (k - 1)*q + j;
                 if A(j) == 1
                     temp = M(current);
                     samples = samples + 1;
                     if temp == 1
                         occupied2 = occupied2 + 1;
-                        n = n + 1;
+                        n1 = n1 + 1;
 %                         if n > min([backoffMax, q])
 %                             n = min([backoffMax, q]);
 %                         end
-                        if n > q
-                            n = q;
+                        if n1 > q
+                            n1 = q;
                         end
-                        temp2 = j + n - 1;
+                        temp2 = j + n1 - 1;
                         if temp2 > q
                             temp2 = q;
                         end
                         A(j: temp2) = 0;
+                        n2 = 1;
                     elseif temp == 0
                         vacant2 = vacant2 + 1;
-                        %A(j: j+1) = 1;      % Change from paper's algorithm
-                        n = n1_def;
+                        n2 = n2 + 1;
+                        if n2 > q
+                            n2 = q;
+                        end
+                        temp2 = j + n2 - 1;
+                        if temp2 > q
+                            temp2 = q;
+                        end
+                        A(j: temp2) = 1;      % Change from paper's algorithm
+                        n1 = 1;
                     end 
                 elseif A(j) == 0
-                    n = n1_def;
+                    n1 = 1;
                 end                
             end
         end
 
         % Calculate metrics     
         samplesTot(x, y) = samples;
-        reductionTot(x, y) = samples / lengthB;  
+        reductionTot(x, y) = samples / length;  
         vacanciesTot(x, y) = vacant;
         vacanciesTot2(x, y) = vacant2;
     end   
