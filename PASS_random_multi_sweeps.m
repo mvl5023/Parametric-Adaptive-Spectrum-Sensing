@@ -2,7 +2,7 @@
 % dynamic spectrum sensing
 % From 2007 paper by D. Datla et al.
 %  * Multi-channel testing, exponential distribution
-%  * Sweeping across max scan period and exponential distr. coefficient
+%  * Sweeping across max backoff and exponential distr. coefficient
 %-----------------------------------------------------------------------
 
 % Simulation parameters
@@ -28,7 +28,8 @@ vacanciesTot2 = zeros(sweepsP, sweepsQ, channels);
 %------------------------------------------------------------------------
 % PASS algorithm
 %------------------------------------------------------------------------
-for p = linspace(startP, stopP, sweepsP)           % exponential distribution coefficient
+% Sweep exponential distribution coefficient
+for p = linspace(startP, stopP, sweepsP)          
     x = round((p - startP)/0.1 + 1);
     m = p;                % constant coefficient for exponential distr.
     
@@ -39,15 +40,20 @@ for p = linspace(startP, stopP, sweepsP)           % exponential distribution co
     % Calculate number of occupied and vacant samples per channel
     occupied = sum(M, 2);
     vacant = length - occupied;
-    for q = linspace(startQ, stopQ, sweepsQ)        % length of time-freq assignment matrix row
+    
+    % Sweep maximum backoff
+    for q = linspace(startQ, stopQ, sweepsQ)       
         y = (q - startQ)/10 + 1;
         occupied2 = zeros(channels, 1);
         vacant2 = zeros(channels, 1);
         n1 = n1_def .* ones(channels, 1);          % Number of scan periods removed from A
         n2 = n2_def .* ones(channels, 1);          % Number of scan periods added to A
         samples = zeros(channels, 1);   % # of times each channel sampled by PASS
-        for j = 1:length         % Sweep through columns of A (samples)
-            for i = 1:channels    % Sweep through rows of A (channels)
+        
+        % Sweep samples
+        for j = 1:length  
+            % Sweep channels
+            for i = 1:channels    
                 if A(i, j) == 1
                     temp = M(i, j);
                     samples(i) = samples(i) + 1;

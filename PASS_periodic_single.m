@@ -2,17 +2,17 @@
 % dynamic spectrum sensing
 % From 2007 paper by D. Datla et al.
 %  * Single channel testing, periodic occupancy
-%  * Sweeping across max scan period and occupancy percentage
+%  * Sweeping across max backoff and occupancy percentage
 %-----------------------------------------------------------------------
 
 % Simulation parameters
 length = 100000;          % # of samples in occupancy matrix
 
 % Variables for PASS algorithm
-A = ones( channels , length );       % Matrix of time-frequency assignments
-startP = 1;
+A = ones( 1 , length );       % Matrix of time-frequency assignments
+startP = 0;
 stopP = 10;
-sweepsP = 10;
+sweepsP = 11;
 startQ = 10;
 stopQ = 200;
 sweepsQ = 20;
@@ -29,10 +29,10 @@ vacanciesTot2 = zeros(sweepsP, sweepsQ);
 %------------------------------------------------------------------------
 % Sweep channel occupancy percent
 for p = linspace(startP, stopP, sweepsP)           
-    x = p;
+    x = p + 1;
     % Generate test matrix of single channel with periodic occupancy
     M = [ zeros(1, stopP - p) , ones(1, p) ];
-    M = repmat(M, 1, length/sweepsP);
+    M = repmat(M, 1, length/10);
     
     % Calculate number of occupied and vacant samples per channel
     occupied = sum(M);
@@ -44,9 +44,11 @@ for p = linspace(startP, stopP, sweepsP)
         occupied2 = 0;
         vacant2 = 0;
         n1 = n1_def;          % Number of scan periods removed from A
-        n2 = n2_def:          % Number of scan periods added to A
-        samples = 0;   % # of times each channel sampled by PASS
-        for j = 1:length              % Sweep through samples 
+        n2 = n2_def;          % Number of scan periods added to A
+        samples = 0;   % Number of times each channel sampled by PASS
+        
+        % Sweep samples
+        for j = 1:length              
             if A(j) == 1
                 temp = M(j);
                 samples = samples + 1;
