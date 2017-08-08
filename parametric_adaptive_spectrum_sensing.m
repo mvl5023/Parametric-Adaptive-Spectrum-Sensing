@@ -4,14 +4,17 @@
 %-----------------------------------------------------------------------
 
 % Simulation parameters
-channels = 10;          % # of channels in spectrum band
-length = 10000;          % # of samples in occupancy matrix
+channels = 1000;          % # of channels in spectrum band
+length = 1000;          % # of samples in occupancy matrix
 m = 1.2;                % constant coefficient for exponential distr.
 b = 0.02;               % offset for exponential distr.
 
 % Generate test matrix of randomly generated spectrum occupancy data using
 % exponential distribution
 M = spectrum_occ_exp( channels, length, m, b);
+M(100:300, :) = 1;
+M(400:600, :) = 1;
+M(700:900, :) = 1;
 
 % Calculate number of occupied and vacant samples per channel
 occupied = sum(M, 2);
@@ -19,11 +22,12 @@ vacant = length - occupied;
 
 % Variables for PASS algorithm
 A = ones( channels , length );       % Matrix of time-frequency assignments
-backoffMax = 10;                     % Maximum backoff of PASS algorithm
+backoffMax = 20;                     % Maximum backoff of PASS algorithm
 occupied2 = zeros(channels, 1);
 vacant2 = zeros(channels, 1);
 n = ones(channels, 1);          % Scan period multiplier array
 samples = zeros(channels, 1);   % # of times each channel sampled by PASS
+sweepInst = zeros(channels, 1);
 
 %------------------------------------------------------------------------
 % PASS algorithm
@@ -33,6 +37,7 @@ for j = 1:length
         if A(i, j) == 1
             temp = M(i, j);
             samples(i) = samples(i) + 1;
+            sweepInst(j) = sweepInst(j) + 1;
             if temp == 1
                 occupied2(i) = occupied2(i) + 1;
                 n(i) = n(i) + 1;
@@ -49,17 +54,19 @@ for j = 1:length
                 n(i) = 1;
             end 
         elseif A(i, j) == 0
-            n(i) = 1;
+%             n(i) = 1;
         end
     end
 end 
 
 % Calculate metrics
-reduction = samples ./ length;       % Scans as fraction of total length
+reduction = samples / length;
 reductionTot = sum(samples) / (channels * length);       
 vacanciesRatio = vacant2 ./ vacant;
 vacanciesRatioSum = sum(vacant2)/sum(vacant);
 opt = vacanciesRatio ./ reduction;
+efficiency = 100.*(length - samples)./length;
+efficiencyMean = mean(efficiency);
 
 % M = 50.* M;
 % figure

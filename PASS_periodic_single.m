@@ -23,6 +23,8 @@ lossTot = zeros(sweepsP, sweepsQ);
 samplesTot = zeros(sweepsP, sweepsQ);
 vacanciesTot = zeros(sweepsP, sweepsQ);
 vacanciesTot2 = zeros(sweepsP, sweepsQ);
+occupTot = zeros(sweepsP, sweepsQ);
+occupTot2 = zeros(sweepsP, sweepsQ);
 
 %------------------------------------------------------------------------
 % PASS algorithm
@@ -39,13 +41,16 @@ for p = linspace(startP, stopP, sweepsP)
     vacant = length - occupied;
     
     % Sweep maximum backoff
-    for q = linspace(startQ, stopQ, sweepsQ)       
+    for q = linspace(startQ, stopQ, sweepsQ)      
         y = (q - startQ)/10 + 1;   
         occupied2 = 0;
         vacant2 = 0;
-        n1 = n1_def;          % Number of scan periods removed from A
-        n2 = n2_def;          % Number of scan periods added to A
-        samples = 0;   % Number of times each channel sampled by PASS
+        
+        % Initiate run-specific variables
+        A = ones( 1 , length );       % Matrix of time-frequency assignments
+        n1 = n1_def;            % Number of scan periods removed from A
+        n2 = n2_def;            % Number of scan periods added to A
+        samples = 0;            % Number of times each channel sampled by PASS
         
         % Sweep samples
         for j = 1:length              
@@ -86,7 +91,7 @@ for p = linspace(startP, stopP, sweepsP)
                     %-----------------------------------------------------
                 end 
             elseif A(j) == 0
-                n1 = n1_def;
+                %n1 = n1_def;
             end                
         end
 
@@ -95,9 +100,12 @@ for p = linspace(startP, stopP, sweepsP)
         reductionTot(x, y) = samples / length;  
         vacanciesTot(x, y) = vacant;
         vacanciesTot2(x, y) = vacant2;
+        occupTot(x, y) = occupied;
+        occupTot2(x, y) = occupied2;
     end   
 end
 
+efficiency = 100.*(length - samplesTot)./(length);
 vacanciesRatio = vacanciesTot2 ./ vacanciesTot;
 vacanciesRatio(sweepsP, :) = 1;
 opt = vacanciesRatio ./ reductionTot;

@@ -6,15 +6,15 @@
 %-----------------------------------------------------------------------
 
 % Simulation parameters
-channels = 10;          % # of channels in spectrum band
-length = 100000;          % # of samples in occupancy matrix
+channels = 1000;          % # of channels in spectrum band
+length = 1000;          % # of samples in occupancy matrix
 b = 0.02;               % offset for exponential distr.
 
 % Variables for PASS algorithm
 A = ones( channels , length );       % Matrix of time-frequency assignments
-startP = 0.5;
-stopP = 1.2;
-sweepsP = 8;
+startP = 0.6;
+stopP = 2.0;
+sweepsP = 15;
 startQ = 10;
 stopQ = 200;
 sweepsQ = 20;
@@ -24,6 +24,7 @@ reductionTot = zeros(sweepsP, sweepsQ, channels);
 samplesTot = zeros(sweepsP, sweepsQ, channels);
 vacanciesTot = zeros(sweepsP, sweepsQ, channels);
 vacanciesTot2 = zeros(sweepsP, sweepsQ, channels);
+occupTot2 = zeros(sweepsP, sweepsQ, channels);
 
 %------------------------------------------------------------------------
 % PASS algorithm
@@ -36,6 +37,9 @@ for p = linspace(startP, stopP, sweepsP)
     % Generate test matrix of randomly generated spectrum occupancy data using
     % exponential distribution
     M = spectrum_occ_exp( channels, length, m, b);
+    M(100:300, :) = 1;
+    M(400:600, :) = 1;
+    M(700:900, :) = 1;
 
     % Calculate number of occupied and vacant samples per channel
     occupied = sum(M, 2);
@@ -46,9 +50,12 @@ for p = linspace(startP, stopP, sweepsP)
         y = (q - startQ)/10 + 1;
         occupied2 = zeros(channels, 1);
         vacant2 = zeros(channels, 1);
-        n1 = n1_def .* ones(channels, 1);          % Number of scan periods removed from A
-        n2 = n2_def .* ones(channels, 1);          % Number of scan periods added to A
-        samples = zeros(channels, 1);   % # of times each channel sampled by PASS
+        
+        % Initiate run-specific variables
+        A = ones( channels , length );       % Matrix of time-frequency assignments
+        n1 = n1_def .* ones(channels, 1);           % Number of scan periods removed from A
+        n2 = n2_def .* ones(channels, 1);           % Number of scan periods added to A
+        samples = zeros(channels, 1);               % Number of times each channel sampled by PASS
         
         % Sweep samples
         for j = 1:length  
@@ -91,7 +98,7 @@ for p = linspace(startP, stopP, sweepsP)
                         %---------------------------------------------
                     end
                 elseif A(i, j) == 0
-                    n1(i) = 1;
+%                     n1(i) = 1;
                 end
             end
         end
@@ -99,7 +106,8 @@ for p = linspace(startP, stopP, sweepsP)
         % Calculate metrics
         samplesTot(x, y, :) = samples(:);
         vacanciesTot(x, y, :) = vacant(:);
-        vacanciesTot2(x, y, :) = vacant2(:);        
+        vacanciesTot2(x, y, :) = vacant2(:); 
+        occupTot2(x, y, :) = occupied2(:);
         reductionTot(x, y, :) = samples(:) ./ length;      
     end 
 end
@@ -107,7 +115,9 @@ end
 samplesSum = sum(samplesTot, 3);
 vacanciesSum = sum(vacanciesTot, 3);
 vacanciesSum2 = sum(vacanciesTot2, 3);
+occupSum2 = sum(occupTot2, 3);
 reductionMean = mean(reductionTot, 3);
+efficiency = 100.*((length*channels) - samplesSum)./(length*channels);
 
 vacanciesRatio = vacanciesSum2 ./ vacanciesSum;
 opt = vacanciesRatio ./ reductionMean;
