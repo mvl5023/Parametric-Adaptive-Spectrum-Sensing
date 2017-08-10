@@ -6,8 +6,8 @@
 %-----------------------------------------------------------------------
 
 % Simulation parameters
-channels = 1000;          % # of channels in spectrum band
-length = 1000;          % # of samples in occupancy matrix
+channels = 10;          % # of channels in spectrum band
+length = 100000;          % # of samples in occupancy matrix
 b = 0.02;               % offset for exponential distr.
 
 % Variables for PASS algorithm
@@ -37,9 +37,9 @@ for p = linspace(startP, stopP, sweepsP)
     % Generate test matrix of randomly generated spectrum occupancy data using
     % exponential distribution
     M = spectrum_occ_exp( channels, length, m, b);
-    M(100:300, :) = 1;
-    M(400:600, :) = 1;
-    M(700:900, :) = 1;
+%     M(100:300, :) = 1;
+%     M(400:600, :) = 1;
+%     M(700:900, :) = 1;
 
     % Calculate number of occupied and vacant samples per channel
     occupied = sum(M, 2);
